@@ -16,6 +16,7 @@ server_scripts {
 	'@es_extended/locale.lua',
 	'locales/*.lua',
 	'config.lua',
+	'server/functions.lua',
 	'server/main.lua'
 }
 
@@ -28,5 +29,6 @@ client_scripts {
 
 dependencies {
 	'es_extended',
-	'esx_skin'
+	'esx_skin',
+	'esx_datastore'
 }

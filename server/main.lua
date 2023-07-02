@@ -22,10 +22,13 @@ end)
 ESX.RegisterServerCallback('esx_clotheshop:buyClothes', function(source, cb, newSkin, oldSkin)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local purchaseCost = 0
+	local acquiredPieces = {}
 
 	if(Config.ChargePerPiece) then
 		for key,value in pairs(Config.SkinProps) do
-			if (newSkin[value .. '_1'] ~= oldSkin[value .. '_1']) or (newSkin[value .. '_2'] ~= oldSkin[value .. '_2']) then
+			if (changedSkin(value, newSkin, oldSkin)) and shouldCharge(xPlayer, value, newSkin) then
+				local ids = getSkinPropIdentifiers(value)
+				acquiredPieces[value .. '_' .. newSkin[ids.first] .. '_' .. newSkin[ids.second]] = true
 				purchaseCost = purchaseCost + Config.Price
 			end
 		end
@@ -35,6 +38,12 @@ ESX.RegisterServerCallback('esx_clotheshop:buyClothes', function(source, cb, new
 
 	if xPlayer.getMoney() >= purchaseCost then
 		xPlayer.removeMoney(purchaseCost, "Outfit Purchase")
+		TriggerEvent('esx_datastore:getDataStore', 'user_clothes', xPlayer.identifier, function(store)
+			local clothes = store.get('owned_clothes') or {}
+			for key, value in pairs(acquiredPieces) do clothes[key] = value end
+			store.set('owned_clothes', clothes)
+			store.save()
+		end)
 		TriggerClientEvent('esx:showNotification', source, TranslateCap('you_paid', purchaseCost))
 		cb(true)
 	else
